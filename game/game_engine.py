@@ -38,27 +38,53 @@ class GameEngine:
         self.generate_new_card()
 
     def generate_new_card(self):
-        self.num_a = random.randint(3, 15)
-        self.num_b = random.randint(2, 12)
-        self.operator = random.choice(["+", "-", "*"])
+        # Choose an operator
+        self.operator = random.choice(["+", "-", "*", "/"])
 
-        # Prevent negative subtraction results
-        if self.operator == "-" and self.num_a < self.num_b:
-            self.num_a, self.num_b = self.num_b, self.num_a
+        if self.operator == "/":
+            # Task 4:
+            # Generate a division problem with an exact
+            # integer quotient and no remainder.
+            while True:
+                self.num_a = random.randint(3, 15)
+                self.num_b = random.randint(2, 12)
+
+                if self.num_a % self.num_b == 0:
+                    break
+
+        else:
+            # Existing operand generation for +, -, *
+            self.num_a = random.randint(3, 15)
+            self.num_b = random.randint(2, 12)
+
+            # Prevent negative subtraction results
+            if self.operator == "-" and self.num_a < self.num_b:
+                self.num_a, self.num_b = self.num_b, self.num_a
 
         self.input_box.clear()
 
-        # Task 2: reset timer for every new question
+        # Task 2:
+        # Reset timer for every new question
         self.question_start_time = pygame.time.get_ticks()
 
     def compute_expected_answer(self):
-        # Task 1: perform actual arithmetic
+        # Task 1 + Task 4:
+        # Calculate the actual arithmetic result.
+
         if self.operator == "+":
             return self.num_a + self.num_b
+
         elif self.operator == "-":
             return self.num_a - self.num_b
+
         elif self.operator == "*":
             return self.num_a * self.num_b
+
+        elif self.operator == "/":
+            # Task 4:
+            # Division is guaranteed to be exact,
+            # so integer division gives a whole-number answer.
+            return self.num_a // self.num_b
 
     def submit_answer(self):
         val_str = self.input_box.text.strip()
@@ -77,11 +103,12 @@ class GameEngine:
 
         if user_answer == expected:
 
-            # Task 3: increase consecutive correct streak
+            # Task 3:
+            # Increase consecutive correct streak.
             self.streak += 1
             self.multiplier = self.streak
 
-            # Award points using the current multiplier
+            # Award points using current multiplier.
             self.score += self.multiplier
 
             self.feedback_msg = (
@@ -91,19 +118,20 @@ class GameEngine:
             )
             self.feedback_color = (80, 230, 110)
 
-            # Generate next question and reset timer
+            # Generate next question and reset timer.
             self.generate_new_card()
 
         else:
 
-            # Task 3: wrong answer resets streak
+            # Task 3:
+            # Wrong answer resets streak.
             self.streak = 0
             self.multiplier = 1
 
             self.feedback_msg = f"WRONG! Expected {expected}."
             self.feedback_color = (240, 75, 75)
 
-            # Keep same question but clear input
+            # Keep same question but clear input.
             self.input_box.clear()
 
     def handle_event(self, event):
@@ -117,29 +145,33 @@ class GameEngine:
                 self.submit_answer()
 
     def update(self):
-        # Task 2: calculate elapsed time
+        # Task 2:
+        # Calculate elapsed time.
         elapsed_time = (
             pygame.time.get_ticks() - self.question_start_time
         ) / 1000
 
-        # If time runs out, register a missed attempt
+        # If time runs out, register a missed attempt.
         if elapsed_time >= self.time_limit:
             self.total_attempts += 1
 
-            # Task 3: timeout resets streak
+            # Task 3:
+            # Timeout resets streak.
             self.streak = 0
             self.multiplier = 1
 
             self.feedback_msg = "TIME OUT! Question missed."
             self.feedback_color = (240, 75, 75)
 
-            # Generate new question and reset timer
+            # Generate new question and reset timer.
             self.generate_new_card()
 
     def render(self, screen):
         screen.fill((25, 29, 37))
 
+        # ---------------------------------------------------------
         # Title
+        # ---------------------------------------------------------
         title_surf = self.font_title.render(
             "Math Flashcards Arena",
             True,
@@ -154,7 +186,9 @@ class GameEngine:
             )
         )
 
+        # ---------------------------------------------------------
         # Score
+        # ---------------------------------------------------------
         score_surf = self.font_hud.render(
             f"Score: {self.score} / {self.total_attempts}",
             True,
@@ -169,7 +203,9 @@ class GameEngine:
             )
         )
 
-        # Task 3: streak and multiplier display
+        # ---------------------------------------------------------
+        # Task 3: Streak and multiplier
+        # ---------------------------------------------------------
         streak_surf = self.font_hud.render(
             f"Streak: {self.streak}   Multiplier: {self.multiplier}x",
             True,
@@ -184,7 +220,9 @@ class GameEngine:
             )
         )
 
+        # ---------------------------------------------------------
         # Flashcard
+        # ---------------------------------------------------------
         card_rect = pygame.Rect(
             self.width // 2 - 130,
             110,
@@ -223,7 +261,9 @@ class GameEngine:
             )
         )
 
-        # Task 2: timer bar
+        # ---------------------------------------------------------
+        # Task 2: Timer bar
+        # ---------------------------------------------------------
         elapsed_time = (
             pygame.time.get_ticks() - self.question_start_time
         ) / 1000
@@ -268,10 +308,14 @@ class GameEngine:
                 border_radius=4
             )
 
+        # ---------------------------------------------------------
         # Input box
+        # ---------------------------------------------------------
         self.input_box.render(screen)
 
+        # ---------------------------------------------------------
         # Submit button
+        # ---------------------------------------------------------
         pygame.draw.rect(
             screen,
             (45, 140, 80),
@@ -301,7 +345,9 @@ class GameEngine:
             )
         )
 
+        # ---------------------------------------------------------
         # Feedback message
+        # ---------------------------------------------------------
         msg_surf = self.font_hud.render(
             self.feedback_msg,
             True,
