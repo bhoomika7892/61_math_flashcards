@@ -10,10 +10,15 @@ class GameEngine:
 
         self.score = 0
         self.total_attempts = 0
+
+        # Task 3: streak and multiplier
+        self.streak = 0
+        self.multiplier = 1
+
         self.feedback_msg = "Solve the card and press Enter!"
         self.feedback_color = (200, 205, 215)
 
-        # Task 2: Timer settings
+        # Task 2: per-question timer
         self.time_limit = 10.0
         self.question_start_time = pygame.time.get_ticks()
 
@@ -43,11 +48,11 @@ class GameEngine:
 
         self.input_box.clear()
 
-        # Task 2: Reset timer for every new question
+        # Task 2: reset timer for every new question
         self.question_start_time = pygame.time.get_ticks()
 
     def compute_expected_answer(self):
-        # Task 1: Perform actual arithmetic based on the operator
+        # Task 1: perform actual arithmetic
         if self.operator == "+":
             return self.num_a + self.num_b
         elif self.operator == "-":
@@ -59,6 +64,7 @@ class GameEngine:
         val_str = self.input_box.text.strip()
 
         # Empty input does not count as an attempt
+        # and does not affect the streak.
         if not val_str or val_str == "-":
             self.feedback_msg = "Type an answer first!"
             self.feedback_color = (240, 175, 40)
@@ -70,21 +76,34 @@ class GameEngine:
         self.total_attempts += 1
 
         if user_answer == expected:
-            self.score += 1
+
+            # Task 3: increase consecutive correct streak
+            self.streak += 1
+            self.multiplier = self.streak
+
+            # Award points using the current multiplier
+            self.score += self.multiplier
+
             self.feedback_msg = (
                 f"CORRECT! {self.num_a} {self.operator} "
-                f"{self.num_b} = {expected}"
+                f"{self.num_b} = {expected} "
+                f"+{self.multiplier} points"
             )
             self.feedback_color = (80, 230, 110)
 
-            # Generate a new question and reset its timer
+            # Generate next question and reset timer
             self.generate_new_card()
 
         else:
+
+            # Task 3: wrong answer resets streak
+            self.streak = 0
+            self.multiplier = 1
+
             self.feedback_msg = f"WRONG! Expected {expected}."
             self.feedback_color = (240, 75, 75)
 
-            # Keep the same question but clear the input
+            # Keep same question but clear input
             self.input_box.clear()
 
     def handle_event(self, event):
@@ -98,7 +117,7 @@ class GameEngine:
                 self.submit_answer()
 
     def update(self):
-        # Task 2: Calculate elapsed time
+        # Task 2: calculate elapsed time
         elapsed_time = (
             pygame.time.get_ticks() - self.question_start_time
         ) / 1000
@@ -107,10 +126,14 @@ class GameEngine:
         if elapsed_time >= self.time_limit:
             self.total_attempts += 1
 
+            # Task 3: timeout resets streak
+            self.streak = 0
+            self.multiplier = 1
+
             self.feedback_msg = "TIME OUT! Question missed."
             self.feedback_color = (240, 75, 75)
 
-            # Generate a new question and reset the timer
+            # Generate new question and reset timer
             self.generate_new_card()
 
     def render(self, screen):
@@ -146,10 +169,25 @@ class GameEngine:
             )
         )
 
+        # Task 3: streak and multiplier display
+        streak_surf = self.font_hud.render(
+            f"Streak: {self.streak}   Multiplier: {self.multiplier}x",
+            True,
+            (255, 190, 90)
+        )
+
+        screen.blit(
+            streak_surf,
+            (
+                self.width // 2 - streak_surf.get_width() // 2,
+                82
+            )
+        )
+
         # Flashcard
         card_rect = pygame.Rect(
             self.width // 2 - 130,
-            95,
+            110,
             260,
             110
         )
@@ -185,10 +223,7 @@ class GameEngine:
             )
         )
 
-        # =========================================================
-        # Task 2: Timer bar
-        # =========================================================
-
+        # Task 2: timer bar
         elapsed_time = (
             pygame.time.get_ticks() - self.question_start_time
         ) / 1000
@@ -198,14 +233,14 @@ class GameEngine:
             1 - (elapsed_time / self.time_limit)
         )
 
-        # Timer background
         timer_rect = pygame.Rect(
             self.width // 2 - 130,
-            215,
+            225,
             260,
             8
         )
 
+        # Timer background
         pygame.draw.rect(
             screen,
             (70, 75, 85),
@@ -277,6 +312,6 @@ class GameEngine:
             msg_surf,
             (
                 self.width // 2 - msg_surf.get_width() // 2,
-                295
+                300
             )
         )
